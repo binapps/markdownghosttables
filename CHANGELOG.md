@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.1
+
+- The data pills flip direction: the block now deploys LEFTWARD from its anchor — an `after` attachment on the character preceding the cell's mandatory space — so a cell reads text · pill · space · pipe. Same anchor as 0.3.0 (the space glued to the pipe), but the ghosts now sit next to the text, which is the separator row's exact geometry: data and separator rows finally read as one thing. Johan's call after living with 0.3.0 for a week, weighing in the one cost against it: a space to the right of an `after` widget has its whitespace dot painted at the pre-widget column, so the anchor's dot shows at the pill's left end instead of over the real space. That is a VS Code bug, not something a decoration can fix — reported upstream as microsoft/vscode#333173 — and the shape shouldn't be chosen to dodge it.
+- Side effect of the interior slot, all upside: the pill now sits INSIDE the band's range, so the band backs it even with `pipeTint` off (no more thin slivers under zoom) and its own paint stacks over the band, exactly like the separator's ghost always did. `ghostShade` stays at 2, which reads stronger than in 0.3.0 by design.
+
 ## 0.3.0
 
 - Ghost blocks redesigned around the attachment rule, finally pinned down in a dedicated anchor lab (a line of digits, each carrying a widget that encodes its own config, tabulated from real screenshots): a decoration range only fixes the render SLOT — `before` at range start, `after` at range end, whatever the range's content, width or emptiness — while the GLUE belongs to the slot, not the range: a `before` widget stays welded, caret and selection alike, to the real character on the LEFT of its slot, an `after` widget to the one on its RIGHT. Every shape up to 0.2.23 was a guess at this, and the "empty ranges associate unpredictably" belief was the rule operating unseen.

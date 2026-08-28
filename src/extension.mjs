@@ -7,9 +7,12 @@ import { analyzeText, formatText, formatTable, measure } from './core.mjs';
 
 // Per-column background palette (low alpha: works on light and dark themes).
 // A column paints its whole cells — text, real padding, separator row — as
-// one flat band. The pills (ghost padding) hang at a band edge, so the band
-// cannot cover them and they paint their own background: see ghostBg. Real
-// vs virtual is told by the whitespace dots.
+// one flat band, and since shape B the pills (ghost padding) sit INSIDE that
+// band's range: the band backs them and their own paint stacks over it (see
+// ghostBg). The one exception is an empty cell's pill, which hangs at the
+// band's edge and paints alone. Real vs virtual is told by the whitespace
+// dots — except for the anchor SP of a data pill, whose dot VS Code paints
+// at its pre-widget column (see the anchor rule below).
 const PALETTE = [
   { rgb: '70, 150, 235', alpha: 0.07 },
   { rgb: '55, 212, 155', alpha: 0.07 },
@@ -19,14 +22,14 @@ const PALETTE = [
   { rgb: '125, 215, 255', alpha: 0.07 },
   { rgb: '160, 212, 138', alpha: 0.08 }
 ];
-// A pill hangs at its band's edge (anchor-lab rule: a widget at a range
-// boundary is never covered by the rectangle), so it paints its own
-// background: the column hue with its alpha times the ghostShade setting —
-// a live dial, because attachment and range backgrounds do not composite
-// identically at equal rgba (empirical: 1.0 rendered darker than the band,
-// 0.5 lighter). At the value where the cell looks uniform the dial doubles
-// as the "pastille" control: above it the pill stands out, which is what
-// the shipped default (2) deliberately does.
+// A pill paints its own background on top of the band: the column hue with
+// its alpha times the ghostShade setting — a live dial, because attachment
+// and range backgrounds do not composite identically at equal rgba
+// (empirical: 1.0 rendered darker than the band, 0.5 lighter). At the value
+// where the cell looks uniform the dial doubles as the "pastille" control:
+// above it the pill stands out from the band's shade. Note the shipped
+// default was calibrated when data pills painted alone over the editor
+// background (shape C); stacked over the band they read stronger.
 const ghostBg = (c, shade) => {
   const p = PALETTE[c % PALETTE.length];
   return `rgba(${p.rgb}, ${p.alpha * shade})`;
@@ -105,8 +108,9 @@ function updateDecorations(editor) {
           // the real char immediately LEFT of its slot, an 'after' widget to
           // the one on its RIGHT; the block [anchor + widget] is atomic.
           // One artifact: a SP immediately RIGHT of an 'after' widget paints
-          // its whitespace dot at the pre-widget column (VS Code, no fix
-          // from a decoration) — no shape may leave a SP right of an 'after'.
+          // its whitespace dot at the pre-widget column — a VS Code bug that
+          // no decoration can work around, reported as microsoft/vscode#333173.
+          // The data pills (shape B) accept it deliberately; see below.
           const push = (start, end, side, content) =>
             ghost.push({ range: new vscode.Range(row.line, start, row.line, end), renderOptions: { [side]: content } });
           if (row.isSeparator) {
@@ -127,17 +131,28 @@ function updateDecorations(editor) {
               push(cell.segEnd, cell.segEnd + 1, 'before', content);
             }
           } else {
-            // Data pills — shape C, the anchor lab's pick: every pill is a
-            // 'before' widget whose glue char is the cell's MANDATORY space.
-            // Left cells and empty cells: slot between the trailing SP and
-            // the closing pipe — the block [SP + ghosts] hangs at the pipe
-            // (Johan's model) with clean whitespace dots. Right-aligned
-            // cells: slot before the first text char — the mirror, block
-            // [leading SP + ghosts]. No mandatory space → no pill (the
-            // linter flags it, Tab repairs it). Discarded shapes: 'after'
-            // the last text char (v0.2.111/115) left the SP right of an
-            // 'after' widget — the dot artifact; 'before' the SP (v0.2.114
-            // and the RC) glued the block to the TEXT, against the model.
+            // Data pills — shape B (Johan's call, 2026-08-28): the pill
+            // renders right after the text and the block deploys LEFTWARD
+            // from its anchor — the cell's mandatory SP, the one glued to
+            // the pipe. That is the separator row's exact geometry, which
+            // is why data and separator rows finally read as one thing:
+            // ghosts glued to the text, real SP glued to the pipe.
+            // Left-aligned cells: 'after' the char preceding the anchor SP
+            // (extra typed SPs stay LEFT of the pill; the anchor is always
+            // the rightmost one). Right-aligned cells already are the
+            // mirror ('before' the first text char, block [SP + ghosts]).
+            // Empty cells keep the only shape a single shared space allows:
+            // 'before' the pipe, block [SP + ghosts]. No mandatory space →
+            // no pill (the linter flags it, Tab repairs it).
+            // Accepted cost, weighed and chosen by Johan: an SP to the
+            // RIGHT of an 'after' widget paints its whitespace dot at the
+            // pre-widget column, so the anchor's dot shows at the pill's
+            // left end instead of over the real space — a VS Code artifact
+            // (reported upstream), not something a decoration can fix.
+            // Bonus of the interior slot: the pill now sits INSIDE the
+            // band's range, so the band backs it even with pipeTint off
+            // (no naked slivers) and its own paint stacks over the band —
+            // again exactly like the separator's ghost.
             const content = { contentText: NBSP.repeat(needed), backgroundColor: wantColors ? ghostBg(c, shade) : tint, textDecoration: GHOST_CSS };
             const lineLen = editor.document.lineAt(row.line).text.length;
             if (cell.text === '') {
@@ -148,8 +163,8 @@ function updateDecorations(editor) {
               if (cell.start > cell.segStart) {
                 push(cell.start, cell.start + 1, 'before', content);
               }
-            } else if (cell.segEnd > cell.end && lineLen > cell.segEnd) {
-              push(cell.segEnd, cell.segEnd + 1, 'before', content);
+            } else if (cell.segEnd > cell.end && cell.segEnd - 2 >= cell.segStart) {
+              push(cell.segEnd - 2, cell.segEnd - 1, 'after', content);
             }
           }
         });
