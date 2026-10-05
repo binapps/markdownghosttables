@@ -23,12 +23,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/goohan/markdownghosttables.git"
+    "url": "https://github.com/binapps/markdownghosttables.git"
   },
   "bugs": {
-    "url": "https://github.com/goohan/markdownghosttables/issues"
+    "url": "https://github.com/binapps/markdownghosttables/issues"
   },
-  "homepage": "https://github.com/goohan/markdownghosttables#readme",
+  "homepage": "https://github.com/binapps/markdownghosttables#readme",
   "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:markdown"
