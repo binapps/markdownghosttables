@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.2
+
+- Published under the `binapps` publisher as `binapps.mdghosttables` (was `goohan.markdownghosttables`). No functional changes. The Marketplace requires extension names to be unique across all publishers and keeps `markdownghosttables` bound to the original listing — unpublishing or removing it does not free the name —, so the id had to change. The `goohan.markdownghosttables` listing is retired: uninstall it and install this one (VS Code treats them as two different extensions, so both can coexist — and decorate twice — until you do).
+
 ## 0.3.1
 
 - The data pills flip direction: the block now deploys LEFTWARD from its anchor — an `after` attachment on the character preceding the cell's mandatory space — so a cell reads text · pill · space · pipe. Same anchor as 0.3.0 (the space glued to the pipe), but the ghosts now sit next to the text, which is the separator row's exact geometry: data and separator rows finally read as one thing. Johan's call after living with 0.3.0 for a week, weighing in the one cost against it: a space to the right of an `after` widget has its whitespace dot painted at the pre-widget column, so the anchor's dot shows at the pill's left end instead of over the real space. That is a VS Code bug, not something a decoration can fix — reported upstream as microsoft/vscode#333173 — and the shape shouldn't be chosen to dodge it.

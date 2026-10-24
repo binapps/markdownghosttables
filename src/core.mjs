@@ -1,5 +1,5 @@
 // Markdown table formatting core — the single source of the algorithm.
-// Canonical home: https://github.com/goohan/markdownghosttables (this repo).
+// Canonical home: https://github.com/binapps/markdownghosttables (this repo).
 // No dependencies and no VS Code API: it is consumed by the extension
 // (src/extension.mjs, baked into the bundle at build time) and by external
 // CLIs that keep a baked copy of this file (byte-identical, refreshed on sync).
