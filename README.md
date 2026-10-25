@@ -6,6 +6,12 @@ Alignment padding in markdown tables is presentation, not content: it bloats fil
 
 ![Compact markdown tables rendered with ghost alignment and column colors](assets/screenshot-ghost-colored-tables.png)
 
+## Install
+
+Search for **Markdown Ghost Tables** in the Extensions view, or open Quick Open (`Ctrl+P`) and run `ext install binapps.mdghosttables`. Marketplace page: https://marketplace.visualstudio.com/items?itemName=binapps.mdghosttables.
+
+Coming from `goohan.markdownghosttables`? It is the same extension, now published by Binapps: uninstall the old listing and install this one. Your settings carry over unchanged.
+
 ## Features
 
 - **Ghost alignment** — virtual padding rendered with VS Code decorations: compact tables look column-aligned without a single real space written to the file. The ghost padding has a subtle background tint so you always know which spaces are real. Adaptive by design: on a table that is already aligned with real spaces it renders nothing, so it never double-aligns.
